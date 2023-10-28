@@ -17,7 +17,10 @@ export default function FormSignIn() {
     password: "",
   });
 
-  const [loading, setLoading] = React.useState(false);
+  const [loading, setLoading] = React.useState({
+    email: false,
+    github: false,
+  });
 
   const router = useRouter();
 
@@ -32,7 +35,7 @@ export default function FormSignIn() {
   const handleSignIn = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    setLoading(true);
+    setLoading({ ...loading, email: true });
 
     const { error } = await supabase.auth.signInWithPassword({
       email: input.email,
@@ -43,14 +46,31 @@ export default function FormSignIn() {
       alert("Signin Success");
       router.push("/profile");
 
-      setLoading(false);
+      setLoading({ ...loading, email: false });
     } else {
       alert(error.message);
 
-      setLoading(false);
+      setLoading({ ...loading, email: false });
     }
 
     router.refresh();
+  };
+
+  const handleSignInGithub = async () => {
+    setLoading({ ...loading, github: true });
+
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: "github",
+      options: {
+        redirectTo: `${location.origin}/auth/callback`,
+      },
+    });
+
+    if (!error) {
+      setLoading({ ...loading, github: false });
+    } else {
+      setLoading({ ...loading, github: false });
+    }
   };
 
   return (
@@ -74,10 +94,16 @@ export default function FormSignIn() {
           />
         </div>
 
-        <Button disable={loading} type="submit">
-          {loading ? "Loading..." : "Sign In"}
-        </Button>
+        <div className="flex flex-col gap-3">
+          <Button disable={loading.email} type="submit">
+            {loading.email ? "Loading..." : "Sign In"}
+          </Button>
+        </div>
       </form>
+
+      <Button onClick={handleSignInGithub} outline disable={loading.github}>
+        {loading.github ? "Loading.." : "Github"}
+      </Button>
 
       <div>
         <div>
